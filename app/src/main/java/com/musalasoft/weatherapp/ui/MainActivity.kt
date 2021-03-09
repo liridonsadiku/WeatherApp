@@ -33,8 +33,7 @@ import java.util.*
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     lateinit var viewModel: HomeViewModel
     lateinit var binding: ActivityMainBinding
-
-    private val RC_SMS_PERM = 122
+    private val REQUEST_CODE_LOCATION = 1
     lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +47,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     @SuppressLint("MissingPermission")
     private fun getLastLocation() {
-
         if (EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION,
                                                          Manifest.permission.ACCESS_COARSE_LOCATION,
                                                          Manifest.permission.INTERNET)) {
@@ -68,7 +66,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
         } else {
             EasyPermissions.requestPermissions(this, getString(R.string.enable_location),
-                    RC_SMS_PERM, Manifest.permission.ACCESS_FINE_LOCATION,
+                    REQUEST_CODE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.INTERNET);
         }
@@ -84,9 +82,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         }else{
             showToast(getString(R.string.can_not_get_your_current_city))
         }
-
         binding.tvCurrentLocation.text = location.latitude.toString() +" njeshi " + location.longitude.toString() + " city: " + cityName
-
     }
 
     private fun showEnableLocationDialog() {
@@ -116,13 +112,11 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun observeViewModel() {
-
         binding.viewModel!!.loading.observe(this, androidx.lifecycle.Observer { loading ->
             loading?.let { if (it){
                 binding.progressBar.visibility = View.VISIBLE
             }else{
                 binding.progressBar.visibility = View.GONE
-
             }}
         })
 
@@ -132,7 +126,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         override fun onLocationResult(locationResult: LocationResult) {
             val mLastLocation: Location = locationResult.lastLocation
             binding.tvCurrentLocation.text = mLastLocation.latitude.toString() +" dyshi " + mLastLocation.longitude.toString()
-
         }
     }
 
@@ -151,7 +144,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
 
     }
@@ -161,11 +153,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             AppSettingsDialog.Builder(this).build().show()
         }else{
             EasyPermissions.requestPermissions(this, getString(R.string.enable_location),
-                    RC_SMS_PERM,Manifest.permission.ACCESS_FINE_LOCATION,
+                    REQUEST_CODE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.INTERNET);
         }
-
     }
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
@@ -180,20 +171,16 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         super.onStop()
         EventBus.getDefault().unregister(this)
     }
-
     override fun onDestroy() {
         super.onDestroy()
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
     }
-
     override fun onResume() {
         super.onResume()
         getLastLocation()
     }
-
     @Subscribe
     fun onEvent(message: ShowToastEvent) {
         showToast(message.message)
     }
-
 }
