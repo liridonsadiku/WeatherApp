@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">WeatherApp</string>
+    <string name="enable_location">Allow location permission in order to use the app!</string>
+
 </resources>
