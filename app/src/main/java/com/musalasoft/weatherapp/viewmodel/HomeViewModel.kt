@@ -3,12 +3,17 @@ package com.musalasoft.weatherapp.viewmodel
 import androidx.lifecycle.MutableLiveData
 import com.musalasoft.weatherapp.api.ApiService
 import com.musalasoft.weatherapp.data.AppPreferences
-
+import com.musalasoft.weatherapp.event.ShowToastEvent
+import com.musalasoft.weatherapp.model.Weather
+import com.recyclego.userapp.utils.APP_ID
 import com.recyclego.userapp.utils.BaseViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.internal.util.NotificationLite.disposable
 import io.reactivex.schedulers.Schedulers
+import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
+
 
 class HomeViewModel : BaseViewModel() {
     @Inject
@@ -18,107 +23,32 @@ class HomeViewModel : BaseViewModel() {
 
    // val list = MutableLiveData<List<JobOrdersResponse>>()
 
-    private lateinit var subscription: Disposable
+    private lateinit var disposable: Disposable
     val loading = MutableLiveData<Boolean>()
-
-    var isNetworkAvailable = MutableLiveData<Boolean>()
-
-
-//    fun getJobOrders(currentDate: String) {
-//        //  if (isNetworkAvailable.value == true) {
-//
-//        subscription = apiService.getJobOrders(preferences.token.toString(), currentDate)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .doOnSubscribe { loading.value = true }
-//            .doOnTerminate { loading.value = false }
-//            .subscribe({ result ->
-//
-//                list.value = result
-//
-//
-//            }, { e ->
-//                e.printStackTrace()
-//                EventBus.getDefault()
-//                    .post(ShowToastEvent("Something went wrong with error: " + e.localizedMessage))
-//                if (e != null && e.localizedMessage != null && e.localizedMessage.contains(
-//                        "Unauthorized",
-//                        true
-//                    )
-//                ) {
-//                    EventBus.getDefault().post(LogoutUserEvent())
-//                }
-//
-//            })
-//    }
-//            else{
-//              EventBus.getDefault().post(ShowToastEvent("No internet connection"))
-//          }
+    val weather = MutableLiveData<Weather>()
 
 
+    fun getCurrentWather(cityName: String) {
+        disposable = apiService.getCurrentWeatherBasedOnCity(cityName, APP_ID,"metric")
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { loading.value = true }
+            .doOnTerminate { loading.value = false }
+            .subscribe({ result ->
+                if (result != null) {
+                    weather.value = result
+                }
 
-//    fun openMenu() {
-//        EventBus.getDefault().post(OpenMenuEvent())
-//    }
-//
-//    fun closeMenu() {
-//        EventBus.getDefault().post(CloseMenuEvent())
-//
-//    }
+            }, { error ->
+                error.printStackTrace()
+                EventBus.getDefault().post(ShowToastEvent("Something went wrong with error: " + error.localizedMessage))
+            })
+    }
 
-//    fun onLogoutClicked() {
-//
-//
-//        println("Tokeni: kur bon logout" + preferences.token)
-//
-//
-//        subscription = apiService.logout(preferences.token.toString())
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .doOnSubscribe { loading.value = true}
-//            .doOnTerminate { loading.value = false}
-//            .subscribe({ result ->
-//
-//                preferences.deletePrefs()
-//                EventBus.getDefault().post(OpenActivityEvent(LoginActivity()))
-//                EventBus.getDefault().post(CloseMenuEvent())
-//
-//
-//            }, { e ->
-//                e.printStackTrace()
-//
-//                EventBus.getDefault().post(ShowToastEvent("Something went wrong with error: " + e.localizedMessage))
-//
-//                if (e != null && e.localizedMessage != null && e.localizedMessage.contains("Unauthorized",true)) {
-//                    EventBus.getDefault().post(LogoutUserEvent())
-//                }
-//
-//            })
-//
-//
-//    }
-//
-//    fun updateFirebaseToken(updateFirebaseTokenBody: UpdateFirebaseTokenBody) {
-//        if (preferences.token != null) {
-//            subscription = apiService.updateFirebaseToken(preferences.token.toString(), "application/json", updateFirebaseTokenBody)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnSubscribe { }
-//                .doOnTerminate { }
-//                .subscribe({ result ->
-//
-//                }, { e ->
-//                    e.printStackTrace()
-//                    if (e != null && e.localizedMessage != null && e.localizedMessage.contains(
-//                            "Unauthorized",
-//                            true
-//                        )
-//                    ) {
-//                        EventBus.getDefault().post(LogoutUserEvent())
-//                    }
-//                })
-//        }
-//    }
+    override fun onCleared() {
+        disposable.dispose()
+        super.onCleared()
+    }
 
 
 }

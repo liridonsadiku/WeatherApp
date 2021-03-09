@@ -5,8 +5,6 @@ import android.widget.Toast
 
 import java.util.regex.Pattern
 
-
-
 fun Context.showToast(message: String){
     Toast.makeText(this,message,Toast.LENGTH_SHORT).show()
 }

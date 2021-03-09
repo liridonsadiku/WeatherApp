@@ -17,12 +17,9 @@ class App: DaggerApplication(){
     override fun onCreate() {
         super.onCreate()
         instance = this
-
-            //per notification
     }
 
     companion object{
         lateinit var instance: App
-        private set
     }
 }
