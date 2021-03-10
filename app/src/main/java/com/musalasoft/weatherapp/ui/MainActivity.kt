@@ -10,13 +10,14 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
-import android.net.NetworkInfo
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.ConnectivityManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.location.*
@@ -25,6 +26,7 @@ import com.musalasoft.weatherapp.databinding.ActivityMainBinding
 import com.musalasoft.weatherapp.event.ShowToastEvent
 import com.musalasoft.weatherapp.model.Weather
 import com.musalasoft.weatherapp.viewmodel.HomeViewModel
+import com.recyclego.userapp.utils.hideKeyboard
 import com.recyclego.userapp.utils.isConnected
 import com.recyclego.userapp.utils.showToast
 import com.recyclego.userapp.utils.showToastLong
@@ -47,6 +49,32 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         viewModel = ViewModelProviders.of(this).get(HomeViewModel::class.java)
         binding.viewModel = viewModel
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        getLastLocation()
+        onInteractionListeners()
+    }
+
+    private fun onInteractionListeners() {
+        binding.etSearchForCity.setOnEditorActionListener(object : TextView.OnEditorActionListener {
+            override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    if (binding.etSearchForCity.text.length>2){
+                        if (isConnected){
+                            val cityName = binding.etSearchForCity.text.toString()
+                            binding.viewModel!!.getCurrentWather(cityName)
+                            hideKeyboard()
+                            binding.etSearchForCity.clearFocus()
+                            binding.etSearchForCity.text.clear()
+                        }else{
+                            showToastLong(getString(R.string.no_internet_message))
+                        }
+                    }else{
+                        showToast("Type more than 2 characters!")
+                    }
+                    return true
+                }
+                return false
+            }
+        })
     }
 
 
@@ -104,7 +132,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 .setPositiveButton("Go to Settings", DialogInterface.OnClickListener {
                     dialog, id -> dialog.cancel()
                     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                    startActivity(intent)
+                    startActivityForResult(intent,91)
                     dialog.cancel()
                 })
                 .setNegativeButton("Cancel", DialogInterface.OnClickListener {
@@ -196,6 +224,13 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         )
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 91){
+            getLastLocation()
+        }
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
@@ -228,10 +263,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     override fun onDestroy() {
         super.onDestroy()
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-    }
-    override fun onResume() {
-        super.onResume()
-        getLastLocation()
     }
     @Subscribe
     fun onEvent(message: ShowToastEvent) {

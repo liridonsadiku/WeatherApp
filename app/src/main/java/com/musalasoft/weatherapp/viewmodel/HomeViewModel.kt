@@ -37,8 +37,6 @@ class HomeViewModel : BaseViewModel() {
             .subscribe({ result ->
                 if (result != null) {
                     weather.value = result
-                    EventBus.getDefault().post(ShowToastEvent("API CALL successfully finished"))
-
                 }
 
             }, { error ->

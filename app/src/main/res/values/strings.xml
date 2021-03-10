@@ -4,5 +4,6 @@
     <string name="can_not_get_your_current_city">Can not get you current city!</string>
     <string name="description">Description: </string>
     <string name="no_internet_message">No internet connection! Try again later!</string>
+    <string name="search_for_city">Search for city</string>
 
 </resources>
