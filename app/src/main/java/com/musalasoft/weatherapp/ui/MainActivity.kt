@@ -27,7 +27,7 @@ import com.musalasoft.weatherapp.event.ShowToastEvent
 import com.musalasoft.weatherapp.model.Weather
 import com.musalasoft.weatherapp.viewmodel.HomeViewModel
 import com.recyclego.userapp.utils.hideKeyboard
-import com.recyclego.userapp.utils.isConnected
+import com.recyclego.userapp.utils.isNetworkAvailable
 import com.recyclego.userapp.utils.showToast
 import com.recyclego.userapp.utils.showToastLong
 import org.greenrobot.eventbus.EventBus
@@ -42,6 +42,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     lateinit var binding: ActivityMainBinding
     private val REQUEST_CODE_LOCATION = 1
     lateinit var mFusedLocationClient: FusedLocationProviderClient
+    var currentLatitude: Double = 0.0
+    var currentLongitude: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,17 +60,15 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     if (binding.etSearchForCity.text.length>2){
-                        if (isConnected){
+                        if (isNetworkAvailable){
                             val cityName = binding.etSearchForCity.text.toString()
                             binding.viewModel!!.getCurrentWather(cityName)
                             hideKeyboard()
-                            binding.etSearchForCity.clearFocus()
-                            binding.etSearchForCity.text.clear()
                         }else{
                             showToastLong(getString(R.string.no_internet_message))
                         }
                     }else{
-                        showToast("Type more than 2 characters!")
+                        showToast(getString(R.string.type_more_than_two_chars))
                     }
                     return true
                 }
@@ -84,13 +84,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                                                          Manifest.permission.ACCESS_COARSE_LOCATION,
                                                          Manifest.permission.INTERNET)) {
             if (isLocationEnabled()) {
-                //observeViewModel()
                 mFusedLocationClient.lastLocation.addOnCompleteListener { task ->
-                    var location: Location? = task.result
+                    val location: Location? = task.result
                     if (location == null) {
                         requestNewLocationData()
                     } else {
-                        if (isConnected){
+                        if (isNetworkAvailable){
                             getCityNameBasedOnLocation(location)
                             observeViewModel()
                         }else{
@@ -113,10 +112,13 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private fun getCityNameBasedOnLocation(location: Location) {
         val geocoder = Geocoder(this, Locale.getDefault())
-        val addresses: List<Address> = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+        currentLatitude = location.latitude
+        currentLongitude = location.longitude
+        val addresses: List<Address> = geocoder.getFromLocation(currentLatitude, currentLongitude, 1)
         var cityName = ""
         if (addresses.size>0 && addresses[0].locality != null) {
             cityName = addresses[0].locality
+            binding.etSearchForCity.setText(cityName)
             binding.viewModel!!.getCurrentWather(cityName)
         }else{
             showToast(getString(R.string.can_not_get_your_current_city))
@@ -127,20 +129,20 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private fun showEnableLocationDialog() {
         val dialogBuilder = AlertDialog.Builder(this)
 
-        dialogBuilder.setMessage("Enable location in order to use the app")
+        dialogBuilder.setMessage(getString(R.string.enable_location_in_order_to_use_the_app))
                 .setCancelable(false)
-                .setPositiveButton("Go to Settings", DialogInterface.OnClickListener {
+                .setPositiveButton(getString(R.string.go_to_settins), DialogInterface.OnClickListener {
                     dialog, id -> dialog.cancel()
                     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     startActivityForResult(intent,91)
                     dialog.cancel()
                 })
-                .setNegativeButton("Cancel", DialogInterface.OnClickListener {
+                .setNegativeButton(getString(R.string.cancel), DialogInterface.OnClickListener {
                     dialog, id -> dialog.cancel()
                 })
 
         val alert = dialogBuilder.create()
-        alert.setTitle("Location Warning")
+        alert.setTitle(getString(R.string.location_warning))
         alert.show()
     }
 
@@ -207,7 +209,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             val mLastLocation: Location = locationResult.lastLocation
-           // binding.tvCurrentLocation.text = mLastLocation.latitude.toString() +" dyshi " + mLastLocation.longitude.toString()
+            getCityNameBasedOnLocation(mLastLocation)
         }
     }
 

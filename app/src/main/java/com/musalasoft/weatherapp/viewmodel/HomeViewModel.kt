@@ -21,12 +21,9 @@ class HomeViewModel : BaseViewModel() {
     @Inject
     lateinit var preferences: AppPreferences
 
-   // val list = MutableLiveData<List<JobOrdersResponse>>()
-
     private lateinit var disposable: Disposable
     val loading = MutableLiveData<Boolean>()
     val weather = MutableLiveData<Weather>()
-
 
     fun getCurrentWather(cityName: String) {
         disposable = apiService.getCurrentWeatherBasedOnCity(cityName, APP_ID,"metric")
@@ -38,7 +35,6 @@ class HomeViewModel : BaseViewModel() {
                 if (result != null) {
                     weather.value = result
                 }
-
             }, { error ->
                 errorHandle(error)
             })

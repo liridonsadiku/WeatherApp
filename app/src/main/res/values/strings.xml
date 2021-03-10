@@ -5,5 +5,10 @@
     <string name="description">Description: </string>
     <string name="no_internet_message">No internet connection! Try again later!</string>
     <string name="search_for_city">Search for city</string>
+    <string name="type_more_than_two_chars">Type more than 2 characters!</string>
+    <string name="enable_location_in_order_to_use_the_app">Enable location in order to use the app</string>
+    <string name="go_to_settins">Go to Settings</string>
+    <string name="cancel">Cancel</string>
+    <string name="location_warning">Location Warning</string>
 
 </resources>

@@ -24,7 +24,7 @@ fun isPhoneValid(phone: String): Boolean {
     return android.util.Patterns.PHONE.matcher(phone).matches()
 }
 
-val Context.isConnected: Boolean
+val Context.isNetworkAvailable: Boolean
     get() = (getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)?.activeNetworkInfo?.isConnectedOrConnecting == true
 
 fun Activity.hideKeyboard() {
