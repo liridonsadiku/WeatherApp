@@ -46,7 +46,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvCity"
             android:textColor="@color/white"
-            android:textSize="@dimen/text_size_30"/>
+            android:textSize="@dimen/text_size_22"/>
 
         <TextView
             android:id="@+id/tvFeelsLike"

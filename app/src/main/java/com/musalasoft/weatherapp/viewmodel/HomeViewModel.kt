@@ -40,8 +40,7 @@ class HomeViewModel : BaseViewModel() {
                 }
 
             }, { error ->
-                error.printStackTrace()
-                EventBus.getDefault().post(ShowToastEvent("Something went wrong with error: " + error.localizedMessage))
+                errorHandle(error)
             })
     }
 
