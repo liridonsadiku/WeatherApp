@@ -10,19 +10,24 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
+import android.net.NetworkInfo
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.ConnectivityManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.location.*
 import com.musalasoft.weatherapp.R
 import com.musalasoft.weatherapp.databinding.ActivityMainBinding
 import com.musalasoft.weatherapp.event.ShowToastEvent
+import com.musalasoft.weatherapp.model.Weather
 import com.musalasoft.weatherapp.viewmodel.HomeViewModel
+import com.recyclego.userapp.utils.isConnected
 import com.recyclego.userapp.utils.showToast
+import com.recyclego.userapp.utils.showToastLong
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -51,13 +56,19 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                                                          Manifest.permission.ACCESS_COARSE_LOCATION,
                                                          Manifest.permission.INTERNET)) {
             if (isLocationEnabled()) {
-                observeViewModel()
+                //observeViewModel()
                 mFusedLocationClient.lastLocation.addOnCompleteListener { task ->
                     var location: Location? = task.result
                     if (location == null) {
                         requestNewLocationData()
                     } else {
-                        getCityNameBasedOnLocation(location)
+                        if (isConnected){
+                            getCityNameBasedOnLocation(location)
+                            observeViewModel()
+                        }else{
+                            showToastLong(getString(R.string.no_internet_message))
+                        }
+
                     }
 
                 }
@@ -82,18 +93,19 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         }else{
             showToast(getString(R.string.can_not_get_your_current_city))
         }
-        binding.tvCurrentLocation.text = location.latitude.toString() +" njeshi " + location.longitude.toString() + " city: " + cityName
+      //  binding.tvCurrentLocation.text = location.latitude.toString() +" njeshi " + location.longitude.toString() + " city: " + cityName
     }
 
     private fun showEnableLocationDialog() {
         val dialogBuilder = AlertDialog.Builder(this)
 
-        dialogBuilder.setMessage("Enable location")
+        dialogBuilder.setMessage("Enable location in order to use the app")
                 .setCancelable(false)
                 .setPositiveButton("Go to Settings", DialogInterface.OnClickListener {
                     dialog, id -> dialog.cancel()
                     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     startActivity(intent)
+                    dialog.cancel()
                 })
                 .setNegativeButton("Cancel", DialogInterface.OnClickListener {
                     dialog, id -> dialog.cancel()
@@ -120,12 +132,54 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }}
         })
 
+        binding.viewModel!!.weather.observe(this, androidx.lifecycle.Observer { weather ->
+            weather?.let {
+                fillViewsWithData(weather)
+            }
+        })
+
+    }
+
+    private fun fillViewsWithData(weather: Weather) {
+        val mainWeather = weather.main
+
+        if (mainWeather != null){
+            if (mainWeather.temp != null) {
+                binding.tvTemperature.text = "Temperature: " + mainWeather.temp.toString() + "°C"
+            }
+
+            if (mainWeather.feels_like != null) {
+                binding.tvFeelsLike.text ="Feels like: " + mainWeather.feels_like.toString()+ "°C"
+            }
+
+            if (mainWeather.temp_min != null) {
+                binding.tvTempMin.text ="Min Temperature: " + mainWeather.temp_min.toString()+ "°C"
+            }
+
+            if (mainWeather.temp_max != null) {
+                binding.tvTempMax.text ="Max Temperature: " + mainWeather.temp_max.toString()+ "°C"
+            }
+            if (mainWeather.humidity != null) {
+                binding.tvHumidity.text ="Humidity: " + mainWeather.humidity.toString() + "%"
+            }
+        }
+
+        val weatherList = weather.weather
+        if (weatherList != null && weatherList.size>0){
+            if (weatherList.get(0).description != null) {
+                binding.tvDescription.text = "Description: " + weatherList.get(0).description!!
+            }
+        }
+
+        if (weather.name != null){
+            binding.tvCity.text ="City: " + weather.name!!
+        }
     }
 
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             val mLastLocation: Location = locationResult.lastLocation
-            binding.tvCurrentLocation.text = mLastLocation.latitude.toString() +" dyshi " + mLastLocation.longitude.toString()
+           // binding.tvCurrentLocation.text = mLastLocation.latitude.toString() +" dyshi " + mLastLocation.longitude.toString()
         }
     }
 
@@ -183,4 +237,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     fun onEvent(message: ShowToastEvent) {
         showToast(message.message)
     }
+
+
 }

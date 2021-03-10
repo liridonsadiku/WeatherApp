@@ -1,6 +1,7 @@
 package com.recyclego.userapp.utils
 
 import android.content.Context
+import android.net.ConnectivityManager
 import android.widget.Toast
 
 import java.util.regex.Pattern
@@ -21,3 +22,6 @@ fun isEmailValid(email: String): Boolean {
 fun isPhoneValid(phone: String): Boolean {
     return android.util.Patterns.PHONE.matcher(phone).matches()
 }
+
+val Context.isConnected: Boolean
+    get() = (getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)?.activeNetworkInfo?.isConnectedOrConnecting == true

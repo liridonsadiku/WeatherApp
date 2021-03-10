@@ -11,15 +11,15 @@ data class Main(
 
     @SerializedName("feels_like")
     @Expose
-    var feelsLike: Float? = null,
+    var feels_like: Float? = null,
 
     @SerializedName("temp_min")
     @Expose
-    var tempMin: Float? = null,
+    var temp_min: Float? = null,
 
     @SerializedName("temp_max")
     @Expose
-    var tempMax: Float? = null,
+    var temp_max: Float? = null,
 
     @SerializedName("pressure")
     @Expose
